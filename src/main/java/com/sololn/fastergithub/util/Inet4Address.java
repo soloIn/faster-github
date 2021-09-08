@@ -1,21 +1,29 @@
 package com.sololn.fastergithub.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.sololn.fastergithub.Starter;
+import com.sololn.fastergithub.pojo.IPPojo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName getIP
@@ -44,14 +52,55 @@ public class Inet4Address {
         //  激活主机认证
         HttpsURLConnection.setDefaultHostnameVerifier(hv);
     }
+    
+    public static String sendPost(String url , String params  , String formData) throws Exception{
+
+        StringBuilder builder = new StringBuilder();
+
+        if(!(params == null || params.length() == 0) ){
+            url += ("?" + params );
+        }
+
+        URL Url = new URL(url );
+        URLConnection conn = Url.openConnection();
+
+        //如果设置代理 , 和发送GET一样.
+        conn.setRequestProperty("accept", "*/*" );
+        conn.setRequestProperty("Connection", "Keep-Alive" );
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36");
+
+        //设置之后就可以发送POST请求了
+        conn.setDoInput(true );
+        conn.setDoOutput(true );
 
 
+        //获取它的输出流 , 直接写入post请求
+        PrintWriter writer = new PrintWriter(conn.getOutputStream() );
+        writer.print(formData);
+        writer.flush();
+
+
+        //获取浏览器的返回数据
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream() ) );
+        String line = reader.readLine();
+        line = new String(line.getBytes() , "utf-8" );  //解决乱码的问题
+        while(line != null ){
+            System.out.println(line );
+            builder.append(line + "\r\n" );
+            line = reader.readLine();
+        }
+        reader.close();
+        writer.close();
+
+
+        return builder.toString();
+    }
+    
     public static String sendGet(String url) {
         String result = "";
         BufferedReader in = null;
         try {
-            // https://github.com.ipaddress.com
-            String urlNameString = "https://" + url + ".ipaddress.com";
+            String urlNameString = "https://myssl.com/api/v1/tools/dns_query?qtype=1&host=" + url + "&qmode=-1";
             logger.info("url is {}",urlNameString);
             SkipSSL();
             URL realUrl = new URL(urlNameString);
@@ -76,8 +125,7 @@ public class Inet4Address {
             String line;
             while ((line = in.readLine()) != null) {
                 line = line.trim();
-
-                result += line;
+                result =  getIpFromJson(line);
             }
         } catch (Exception e) {
             System.out.println("发送GET请求出现异常！" + e);
@@ -95,6 +143,56 @@ public class Inet4Address {
         }
         return result;
     }
+
+    /*
+      * 从 json 获取 ip 数据
+      * @param null
+      * @return ip
+      * @author guojian
+      * @date 2021/9/8
+      * @throws
+      **/
+    private static String getIpFromJson(String line) throws IOException {
+        List<IPPojo> ipPojos = new ArrayList<>();
+        JSONObject object = JSON.parseObject(line);
+        JSONObject data = (JSONObject) object.get("data");
+        for(Map.Entry<String,Object> o : data.entrySet()){
+            JSONArray value = (JSONArray) o.getValue();
+            JSONObject o1 = (JSONObject)value.get(0);
+            JSONObject answer = (JSONObject) o1.get("answer");
+            if ("0.00".equals(answer.get("time_consume"))){
+                continue;
+            }
+            JSONArray records = (JSONArray)answer.get("records");
+            if (null == records){
+                logger.error(answer.get("error").toString());
+                return "";
+            }
+            JSONObject o2 = (JSONObject) records.get(0);
+
+            IPPojo ipPojo = new IPPojo();
+            ipPojo.setIp((String) o2.get("value"));
+            ipPojo.setLocation((String) o2.get("ip_location"));
+            ipPojos.add(ipPojo);
+        }
+        // 过滤不能 ping 通的 ip
+        for (IPPojo ipPojo:ipPojos){
+            String cmd = "ping -n 2 " + ipPojo.getIp();
+            if (ShellUtil.pingAddress(cmd)){
+                ipPojo.setEffective(true);
+            }
+        }
+        List<IPPojo> ips = ipPojos.stream().filter(ip -> ip.isEffective()).collect(Collectors.toList());
+
+        for(IPPojo ip: ips){
+            if (ip.getLocation().contains("新加坡")){
+                // 优先选择新加坡
+                return ip.getIp();
+            }
+        }
+        return ips.get(0).getIp();
+    }
+
     public static Map<String, String> getIps(){
         String[] urls = {"alive.github.com",
                 "live.github.com",
@@ -132,11 +230,15 @@ public class Inet4Address {
         Map<String, String> ips = new HashMap<>();
         for (String s : urls){
             String response = Inet4Address.sendGet(s);
-            String ip = Inet4Address.getIpFromStr(response);
+            /*String ip = Inet4Address.getIpFromStr(response);
             if (null == ip){
                 continue;
+            }*/
+            if ("".equals(response)){
+                continue;
             }
-            ips.put(s, ip);
+            logger.info("final ip is {}",response);
+            ips.put(s, response);
         }
         return ips;
     }

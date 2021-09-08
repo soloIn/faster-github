@@ -7,9 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @ClassName HostUtil
@@ -25,49 +25,55 @@ public class HostUtil {
         //C:\Windows\System32\drivers\etc
         Path inPath = Paths.get("C:", "Windows", "System32", "drivers", "etc", "hosts");
         List<String> content = new ArrayList<>();
-        /*try(Stream<String> lines = Files.lines(inPath)){
+        Map<String,String> contentGithub = new HashMap<>();
+
+        try(Stream<String> lines = Files.lines(inPath)){
             content = lines.collect(Collectors.toList());
         } catch (IOException e){
             e.printStackTrace();
         }
         if (null ==content){
             return;
-        }*/
+        }
         // 删除 hosts 中关于 github 的配置
-        /*boolean inside = false;
+        boolean inside = false;
         Iterator<String> iterator = content.iterator();
         while (iterator.hasNext()){
-            if (iterator.next().startsWith("#github")){
+            String next = iterator.next();
+            if (next.startsWith("#github")){
                 inside = true;
                 iterator.remove();
                 continue;
             }
-            if (iterator.next().startsWith("#update")){
+            if (next.startsWith("#update")){
                 inside =false;
                 iterator.remove();
                 continue;
             }
             if (inside){
+                String[] split = next.trim().split("\\s+");
+                Map<String,String> item = new HashMap<>(2);
+                contentGithub.put(split[1],split[0]);
                 iterator.remove();
-                continue;
-            } else {
-                continue;
             }
-        }*/
-        // 添加 github 的配置
+            continue;
+        }
+
         List<String> contentTmp = new ArrayList<>();
-        LocalDateTime time = LocalDateTime.now();
-        time.format(DateTimeFormatter.ISO_DATE_TIME);
+        // 添加 github 的配置
         contentTmp.add("#github 配置#");
-        ips.forEach((key, value) -> {
+        // map 转 string
+        contentGithub.forEach((key, value) -> {
             StringBuffer tap = new StringBuffer();
             int num = 30 - value.length();
             while (num > 0){
                 tap.append(" ");
                 num --;
             }
-            contentTmp.add(value + tap + key );
+            contentTmp.add(value + tap + key);
         });
+        LocalDateTime time = LocalDateTime.now();
+        time.format(DateTimeFormatter.ISO_DATE_TIME);
         contentTmp.add("#update by " + time + " #");
         content.addAll(contentTmp);
         write(content);
