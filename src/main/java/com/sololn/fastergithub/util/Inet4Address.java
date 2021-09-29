@@ -165,8 +165,7 @@ public class Inet4Address {
             }
             JSONArray records = (JSONArray)answer.get("records");
             if (null == records){
-                logger.error(answer.get("error").toString());
-                return "";
+                continue;
             }
             JSONObject o2 = (JSONObject) records.get(0);
 
@@ -189,6 +188,10 @@ public class Inet4Address {
                 // 优先选择新加坡
                 return ip.getIp();
             }
+        }
+        if (ips.isEmpty()){
+            logger.error("not find any available ip ");
+            return "";
         }
         return ips.get(0).getIp();
     }

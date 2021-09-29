@@ -77,7 +77,23 @@ public class HostUtil {
         contentTmp.add("#update by " + time + " #");
         content.addAll(contentTmp);
         write(content);
+        openFolder();
     }
+
+    private static void openFolder() {
+        try {
+            String[] cmd = new String[5];
+            cmd[0] = "cmd";
+            cmd[1] = "/c";
+            cmd[2] = "start";
+            cmd[3] = " ";
+            cmd[4] = outPath.toString();
+            Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void write(List<String> content) throws IOException {
         File outDir = outPath.toFile();
         if (!outDir.exists()){
