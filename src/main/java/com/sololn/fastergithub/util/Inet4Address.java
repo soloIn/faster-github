@@ -97,7 +97,7 @@ public class Inet4Address {
     }
     
     public static String sendGet(String url) {
-        String result = "";
+        StringBuilder result = new StringBuilder("");
         BufferedReader in = null;
         try {
             String urlNameString = "https://myssl.com/api/v1/tools/dns_query?qtype=1&host=" + url + "&qmode=-1";
@@ -124,8 +124,7 @@ public class Inet4Address {
                     connection.getInputStream()));
             String line;
             while ((line = in.readLine()) != null) {
-                line = line.trim();
-                result =  getIpFromJson(line);
+                result.append(line);
             }
         } catch (Exception e) {
             System.out.println("发送GET请求出现异常！" + e);
@@ -141,7 +140,7 @@ public class Inet4Address {
                 e2.printStackTrace();
             }
         }
-        return result;
+        return result.toString();
     }
 
     /*
@@ -152,7 +151,7 @@ public class Inet4Address {
       * @date 2021/9/8
       * @throws
       **/
-    private static String getIpFromJson(String line) throws IOException {
+    private static String getIpFromJson1(String line) throws IOException {
         List<IPPojo> ipPojos = new ArrayList<>();
         JSONObject object = JSON.parseObject(line);
         JSONObject data = (JSONObject) object.get("data");
@@ -196,6 +195,9 @@ public class Inet4Address {
         return ips.get(0).getIp();
     }
 
+    public static String getIpFromJson(String url){
+        String s = sendGet(url);
+    }
     public static Map<String, String> getIps(){
         String[] urls = {"alive.github.com",
                 "live.github.com",
