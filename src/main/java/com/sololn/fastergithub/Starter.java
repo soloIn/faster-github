@@ -1,11 +1,8 @@
 package com.sololn.fastergithub;
 
-import com.sololn.fastergithub.util.HostUtil;
-import com.sololn.fastergithub.util.Inet4Address;
+import com.sololn.fastergithub.util.IpUtil;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  * @ClassName starter
@@ -18,7 +15,8 @@ import java.util.Map;
 public class Starter implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
-        Map<String, String> ips = Inet4Address.getIps();
-        HostUtil.buildContent(ips);
+        IpUtil.readIpMap();
+        /*Map<String, String> ips = Inet4Address.getIps();
+        HostUtil.buildContent(ips);*/
     }
 }

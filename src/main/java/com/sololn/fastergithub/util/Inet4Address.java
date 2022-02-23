@@ -196,7 +196,7 @@ public class Inet4Address {
     }
 
     public static String getIpFromJson(String url){
-        String s = sendGet(url);
+      return sendGet(url);
     }
     public static Map<String, String> getIps(){
         String[] urls = {"alive.github.com",
