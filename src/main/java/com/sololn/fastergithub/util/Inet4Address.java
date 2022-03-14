@@ -1,29 +1,21 @@
 package com.sololn.fastergithub.util;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.sololn.fastergithub.Starter;
-import com.sololn.fastergithub.pojo.IPPojo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @ClassName getIP
@@ -97,7 +89,7 @@ public class Inet4Address {
     }
     
     public static String sendGet(String url) {
-        StringBuilder result = new StringBuilder("");
+        StringBuilder result = new StringBuilder();
         BufferedReader in = null;
         try {
             String urlNameString = "https://myssl.com/api/v1/tools/dns_query?qtype=1&host=" + url + "&qmode=-1";
@@ -113,12 +105,6 @@ public class Inet4Address {
                     "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
             // 建立实际的连接
             connection.connect();
-            // 获取所有响应头字段
-            Map<String, List<String>> map = connection.getHeaderFields();
-            // 遍历所有的响应头字段
-            for (String key : map.keySet()) {
-                //System.out.println(key + "--->" + map.get(key));
-            }
             // 定义 BufferedReader输入流来读取URL的响应
             in = new BufferedReader(new InputStreamReader(
                     connection.getInputStream()));
@@ -143,57 +129,7 @@ public class Inet4Address {
         return result.toString();
     }
 
-    /*
-      * 从 json 获取 ip 数据
-      * @param null
-      * @return ip
-      * @author guojian
-      * @date 2021/9/8
-      * @throws
-      **/
-    private static String getIpFromJson1(String line) throws IOException {
-        List<IPPojo> ipPojos = new ArrayList<>();
-        JSONObject object = JSON.parseObject(line);
-        JSONObject data = (JSONObject) object.get("data");
-        for(Map.Entry<String,Object> o : data.entrySet()){
-            JSONArray value = (JSONArray) o.getValue();
-            JSONObject o1 = (JSONObject)value.get(0);
-            JSONObject answer = (JSONObject) o1.get("answer");
-            if ("0.00".equals(answer.get("time_consume"))){
-                continue;
-            }
-            JSONArray records = (JSONArray)answer.get("records");
-            if (null == records){
-                continue;
-            }
-            JSONObject o2 = (JSONObject) records.get(0);
-
-            IPPojo ipPojo = new IPPojo();
-            ipPojo.setIp((String) o2.get("value"));
-            ipPojo.setLocation((String) o2.get("ip_location"));
-            ipPojos.add(ipPojo);
-        }
-        // 过滤不能 ping 通的 ip
-        for (IPPojo ipPojo:ipPojos){
-            String cmd = "ping -n 2 " + ipPojo.getIp();
-            if (ShellUtil.pingAddress(cmd)){
-                ipPojo.setEffective(true);
-            }
-        }
-        List<IPPojo> ips = ipPojos.stream().filter(ip -> ip.isEffective()).collect(Collectors.toList());
-
-        for(IPPojo ip: ips){
-            if (ip.getLocation().contains("新加坡")){
-                // 优先选择新加坡
-                return ip.getIp();
-            }
-        }
-        if (ips.isEmpty()){
-            logger.error("not find any available ip ");
-            return "";
-        }
-        return ips.get(0).getIp();
-    }
+    
 
     public static String getIpFromJson(String url){
       return sendGet(url);
