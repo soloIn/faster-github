@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -18,30 +15,39 @@ import java.util.stream.Stream;
  **/
 @Slf4j
 public class IpUtil {
-    public static Map<String, String> readIpMap(){
-        List<String> urls = readUrlFromTxt();
-       return readIpMapFromHttp(urls);
+    public static Map<String, String> readIpMap(String queryUrl, String ... params){
+        List<String> sources = readUrlFromTxt();
+       return readIpMapFromHttp(sources, queryUrl, params);
     }
     
     public static List<String> readUrlFromTxt(){
         try (Stream<String> lines = Files.lines(Paths.get("src", "main", "resources", "urls.txt"))){
             List<String> urls = new ArrayList<>();
-            lines.forEach(url -> {
-                urls.add(url);
-            });
+            lines.forEach(urls::add);
             return urls;
         } catch (IOException e){
             throw new RuntimeException(e.getCause());
         }
     }
     
-    public static Map<String, String> readIpMapFromHttp(List<String> urls){
+    public static Map<String, String> readIpMapFromHttp(List<String> sources, String queryUrl, String ... params){
         Map<String, String> ipMap = new HashMap<>();
-        urls.forEach(u -> {
+        List<String> error = new ArrayList<>();
+        sources.forEach(u -> {
             try {
-                String url = "https://myssl.com/api/v1/tools/dns_query?qtype=1&host=" + u + "&qmode=-1";
-                String res = Inet4Address.sendGet(url);
-                ipMap.put(u, JsonUtil.getIpFromJson(res));
+                StringBuilder url = new StringBuilder();
+                url.append(queryUrl).append(u).append("&");
+                Optional<String> reduce = Arrays.stream(params).reduce((x, y) -> x +
+                        "&" + y);
+                reduce.ifPresent(url::append);
+                String res = Inet4Address.sendGet(url.toString());
+                String ipFromJson = JsonUtil.getIpFromJson(res);
+                if (StringUtil.blank(ipFromJson)){
+                    log.info("source {} there is no available ip", u);
+                    error.add(u);
+                    return;
+                }
+                ipMap.put(u, ipFromJson);
             } catch (IOException e) {
                 log.error(e.getMessage());
             }

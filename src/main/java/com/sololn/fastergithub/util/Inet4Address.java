@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
@@ -45,57 +44,14 @@ public class Inet4Address {
         HttpsURLConnection.setDefaultHostnameVerifier(hv);
     }
     
-    public static String sendPost(String url , String params  , String formData) throws Exception{
-
-        StringBuilder builder = new StringBuilder();
-
-        if(!(params == null || params.length() == 0) ){
-            url += ("?" + params );
-        }
-
-        URL Url = new URL(url );
-        URLConnection conn = Url.openConnection();
-
-        //如果设置代理 , 和发送GET一样.
-        conn.setRequestProperty("accept", "*/*" );
-        conn.setRequestProperty("Connection", "Keep-Alive" );
-        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.86 Safari/537.36");
-
-        //设置之后就可以发送POST请求了
-        conn.setDoInput(true );
-        conn.setDoOutput(true );
-
-
-        //获取它的输出流 , 直接写入post请求
-        PrintWriter writer = new PrintWriter(conn.getOutputStream() );
-        writer.print(formData);
-        writer.flush();
-
-
-        //获取浏览器的返回数据
-        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream() ) );
-        String line = reader.readLine();
-        line = new String(line.getBytes() , "utf-8" );  //解决乱码的问题
-        while(line != null ){
-            System.out.println(line );
-            builder.append(line + "\r\n" );
-            line = reader.readLine();
-        }
-        reader.close();
-        writer.close();
-
-
-        return builder.toString();
-    }
     
     public static String sendGet(String url) {
         StringBuilder result = new StringBuilder();
         BufferedReader in = null;
         try {
-            String urlNameString = "https://myssl.com/api/v1/tools/dns_query?qtype=1&host=" + url + "&qmode=-1";
-            logger.info("url is {}",urlNameString);
+            logger.info("url is {}",url);
             SkipSSL();
-            URL realUrl = new URL(urlNameString);
+            URL realUrl = new URL(url);
             // 打开和URL之间的连接
             URLConnection connection = realUrl.openConnection();
             // 设置通用的请求属性

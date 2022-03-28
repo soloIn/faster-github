@@ -53,10 +53,11 @@ public class JsonUtil {
         for (IPPojo ipPojo:ipPojos){
             String cmd = "ping -n 2 " + ipPojo.getIp();
             if (ShellUtil.pingAddress(cmd)){
-                ipPojo.setEffective(true);
+                return ipPojo.getIp();
+               //ipPojo.setEffective(true);
             }
         }
-        List<IPPojo> ips = ipPojos.stream().filter(ip -> ip.isEffective()).collect(Collectors.toList());
+        List<IPPojo> ips = ipPojos.stream().filter(IPPojo::isEffective).collect(Collectors.toList());
         
         for(IPPojo ip: ips){
             if (ip.getLocation().contains("新加坡")){
@@ -65,7 +66,6 @@ public class JsonUtil {
             }
         }
         if (ips.isEmpty()){
-            log.error("not find any available ip ");
             return "";
         }
         return ips.get(0).getIp();
