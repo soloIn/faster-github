@@ -1,5 +1,7 @@
 package com.sololn.fastergithub.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,9 +21,12 @@ import java.util.stream.Stream;
  * @Version 1.0
  **/
 public class HostUtil {
-    private static final  Path outPath = Paths.get("C:", "myProgram", "fast-github", "hosts");
+    private static final  Path outPath ;
 
-    public static void buildContent(Map<String, String> ips) throws IOException {
+    static {
+        outPath = Paths.get(System.getProperty("user.dir") ,"hosts");
+    }
+    private static List<String> buildContent(Map<String, String> ips) throws IOException {
         //C:\Windows\System32\drivers\etc
         Path inPath = Paths.get("C:", "Windows", "System32", "drivers", "etc", "hosts");
         List<String> content = new ArrayList<>();
@@ -32,52 +37,49 @@ public class HostUtil {
         } catch (IOException e){
             e.printStackTrace();
         }
-        if (null ==content){
-            return;
-        }
         // 删除 hosts 中关于 github 的配置
         boolean inside = false;
         Iterator<String> iterator = content.iterator();
         while (iterator.hasNext()){
             String next = iterator.next();
-            if (next.startsWith("#github")){
+            if (next.trim().startsWith("#github-faster")){
                 inside = true;
                 iterator.remove();
                 continue;
             }
-            if (next.startsWith("#update")){
+            if (next.trim().startsWith("#update by github-faster")){
                 inside =false;
                 iterator.remove();
                 continue;
             }
             if (inside){
-                String[] split = next.trim().split("\\s+");
-                Map<String,String> item = new HashMap<>(2);
-                contentGithub.put(split[1],split[0]);
-                iterator.remove();
+                if (!StringUtils.isBlank(next)){
+                    String[] split = next.trim().split("\\s+");
+                    contentGithub.put(split[1],split[0]);
+                    iterator.remove();
+                }
             }
             continue;
         }
-
-        List<String> contentTmp = new ArrayList<>();
+        // todo 读取原github配置，并用新的值去覆盖
+        List<String> contentStr = new ArrayList<>();
         // 添加 github 的配置
-        contentTmp.add("#github 配置#");
+        contentStr.add("#github-faster 配置 #");
         // map 转 string
-        contentGithub.forEach((key, value) -> {
+        ips.forEach((key, value) -> {
             StringBuffer tap = new StringBuffer();
             int num = 30 - value.length();
             while (num > 0){
                 tap.append(" ");
                 num --;
             }
-            contentTmp.add(value + tap + key);
+            contentStr.add(value + tap + key);
         });
         LocalDateTime time = LocalDateTime.now();
         time.format(DateTimeFormatter.ISO_DATE_TIME);
-        contentTmp.add("#update by " + time + " #");
-        content.addAll(contentTmp);
-        write(content);
-        openFolder();
+        contentStr.add("#update by github-faster " + time + " #");
+        content.addAll(contentStr);
+        return content;
     }
 
     private static void openFolder() {
@@ -115,5 +117,10 @@ public class HostUtil {
             throw new RuntimeException(e);
         }
     }
-
+    
+    public static void toFile(Map<String, String> stringStringMap) throws IOException {
+        List<String> content = buildContent(stringStringMap);
+        write(content);
+        openFolder();
+    }
 }

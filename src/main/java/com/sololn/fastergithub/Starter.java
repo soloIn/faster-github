@@ -19,7 +19,7 @@ public class Starter implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         Map<String, String> stringStringMap = IpUtil.readIpMap("https://myssl.com/api/v1/tools/dns_query?qtype=1&host=", "qmode=-1");
-        HostUtil.buildContent(stringStringMap);
+        HostUtil.toFile(stringStringMap);
         /*Map<String, String> ips = Inet4Address.getIps();
         HostUtil.buildContent(ips);*/
     }

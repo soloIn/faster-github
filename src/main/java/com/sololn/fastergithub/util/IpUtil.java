@@ -1,6 +1,7 @@
 package com.sololn.fastergithub.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,7 +43,7 @@ public class IpUtil {
                 reduce.ifPresent(url::append);
                 String res = Inet4Address.sendGet(url.toString());
                 String ipFromJson = JsonUtil.getIpFromJson(res);
-                if (StringUtil.blank(ipFromJson)){
+                if (StringUtils.isEmpty(ipFromJson)){
                     log.info("source {} there is no available ip", u);
                     error.add(u);
                     return;
