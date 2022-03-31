@@ -15,18 +15,16 @@ import java.util.stream.Stream;
 
 /**
  * @ClassName HostUtil
- * @Description TODO
  * @Author HeGuojian
  * @Date 2021/8/30 17:14
  * @Version 1.0
  **/
 public class HostUtil {
-    private static final  Path outPath ;
-
-    static {
-        outPath = Paths.get(System.getProperty("user.dir") ,"hosts");
+    
+    public static void toFile(Map<String, String> stringStringMap, Path path) throws IOException {
+        write(buildContent(stringStringMap), path);
     }
-    private static List<String> buildContent(Map<String, String> ips) throws IOException {
+    private static List<String> buildContent(Map<String, String> ips) {
         //C:\Windows\System32\drivers\etc
         Path inPath = Paths.get("C:", "Windows", "System32", "drivers", "etc", "hosts");
         List<String> content = new ArrayList<>();
@@ -61,12 +59,17 @@ public class HostUtil {
             }
             continue;
         }
-        // todo 读取原github配置，并用新的值去覆盖
+        /*
+        * 用ips的值覆盖hosts的值
+        * */
+        ips.forEach((key, value) -> {
+            contentGithub.put(key, value);
+        });
         List<String> contentStr = new ArrayList<>();
         // 添加 github 的配置
         contentStr.add("#github-faster 配置 #");
         // map 转 string
-        ips.forEach((key, value) -> {
+        contentGithub.forEach((key, value) -> {
             StringBuffer tap = new StringBuffer();
             int num = 30 - value.length();
             while (num > 0){
@@ -82,22 +85,22 @@ public class HostUtil {
         return content;
     }
 
-    private static void openFolder() {
+    private static void openFolder(Path path) {
         try {
             String[] cmd = new String[5];
             cmd[0] = "cmd";
             cmd[1] = "/c";
             cmd[2] = "start";
             cmd[3] = " ";
-            cmd[4] = outPath.toString();
+            cmd[4] = path.toString();
             Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void write(List<String> content) throws IOException {
-        File outDir = outPath.toFile();
+    public static void write(List<String> content, Path path) throws IOException {
+        File outDir = path.toFile();
         if (!outDir.exists()){
             outDir.mkdirs();
         }
@@ -106,21 +109,18 @@ public class HostUtil {
             hosts.createNewFile();
         }
         Files.write(hosts.toPath(),content);
-    }
-
-    private static void unlockInWin(File file) {
-        String cmd = "C:\\myProgram\\fast-github\\cmd\\hostWritable";
-        try {
-            Process p = Runtime.getRuntime().exec(cmd);
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        openFolder(path);
     }
     
-    public static void toFile(Map<String, String> stringStringMap) throws IOException {
-        List<String> content = buildContent(stringStringMap);
-        write(content);
-        openFolder();
-    }
+    
+   
+    /* private static void unlockInWin(File file) {
+         String cmd = "C:\\myProgram\\fast-github\\cmd\\hostWritable";
+         try {
+             Process p = Runtime.getRuntime().exec(cmd);
+             p.waitFor();
+         } catch (IOException | InterruptedException e) {
+             throw new RuntimeException(e);
+         }
+     }*/
 }

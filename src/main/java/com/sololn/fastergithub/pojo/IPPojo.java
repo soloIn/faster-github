@@ -2,7 +2,6 @@ package com.sololn.fastergithub.pojo;
 
 /**
  * @ClassName pojo
- * @Description TODO
  * @Author HeGuojian
  * @Date 2021/9/8 15:53
  * @Version 1.0

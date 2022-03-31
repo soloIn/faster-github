@@ -11,14 +11,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @ClassName getIP
- * @Description TODO
  * @Author HeGuojian
  * @Date 2021/8/30 16:57
  * @Version 1.0
@@ -87,7 +82,7 @@ public class Inet4Address {
 
     
 
-    public static String getIpFromJson(String url){
+    /*public static String getIpFromJson(String url){
       return sendGet(url);
     }
     public static Map<String, String> getIps(){
@@ -127,10 +122,10 @@ public class Inet4Address {
         Map<String, String> ips = new HashMap<>();
         for (String s : urls){
             String response = Inet4Address.sendGet(s);
-            /*String ip = Inet4Address.getIpFromStr(response);
+            *//*String ip = Inet4Address.getIpFromStr(response);
             if (null == ip){
                 continue;
-            }*/
+            }*//*
             if ("".equals(response)){
                 continue;
             }
@@ -160,5 +155,5 @@ public class Inet4Address {
         }
         return null;
     }
-
+*/
 }

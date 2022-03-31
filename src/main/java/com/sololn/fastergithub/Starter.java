@@ -5,6 +5,8 @@ import com.sololn.fastergithub.util.IpUtil;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -18,9 +20,11 @@ import java.util.Map;
 public class Starter implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
-        Map<String, String> stringStringMap = IpUtil.readIpMap("https://myssl.com/api/v1/tools/dns_query?qtype=1&host=", "qmode=-1");
-        HostUtil.toFile(stringStringMap);
-        /*Map<String, String> ips = Inet4Address.getIps();
-        HostUtil.buildContent(ips);*/
+        String url  = "https://myssl.com/api/v1/tools/dns_query?qtype=1&host=";
+        String params = "qmode=-1";
+        Path outPath = Paths.get(System.getProperty("user.dir") ,"hosts");
+        
+        Map<String, String> stringStringMap = IpUtil.readIpMap(url, params);
+        HostUtil.toFile(stringStringMap, outPath);
     }
 }
